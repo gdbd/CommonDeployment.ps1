@@ -1,4 +1,4 @@
-﻿#version 1.8.2
+﻿#version 1.8.3
 param (
 [switch]$Uninstall,
 [string]$Url, 
@@ -50,7 +50,7 @@ function Get-Solutions(){
 function Get-SolutionFeatures($solutionName){    
     $solution = Get-SPSolution $solutionName -ErrorAction:SilentlyContinue
 
-    if ($solution -eq $null){
+    if ($solution -eq $null){		
 		Write-Host "not installed:" $solutionName -ForegroundColor:Red
 		return
 	}	
@@ -281,7 +281,7 @@ function RetractSolution($name, $url){
 	$solution = Get-SPSolution $name -ErrorAction:SilentlyContinue
 	
 	if ($solution -eq $null){
-		Write-Host "not installed:" $name -ForegroundColor:Red
+		Write-Host " not installed, skip" -ForegroundColor:Red
 		return
 	}	
 
@@ -348,7 +348,7 @@ function DeleteSolution($name){
 	
 	
 	if ($solution -eq $null){
-		Write-Host "not exist:" $name -ForegroundColor:Red
+		Write-Host " not exist, skip" -ForegroundColor:Red
 		return
 	}
 	
