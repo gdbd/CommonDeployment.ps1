@@ -1,5 +1,6 @@
-﻿#version 1.8.3
+﻿#version 1.9
 param (
+[switch]$Update,
 [switch]$Uninstall,
 [string]$Url, 
 [string]$Solution, 
@@ -34,13 +35,16 @@ function TrimPsName($val){
     }
     return $val
 }
-function Get-Solutions(){    
+function Get-Solutions(){ 
+   
+    param($nolog = $false)
 
     $solutions = Get-ChildItem $dir -Filter *.wsp | Select -ExpandProperty Name
-
-    Write-Host "found solutions:" -ForegroundColor:Yellow
-
-    $solutions | ForEach-Object { Write-Host $_ -ForegroundColor Cyan }
+      
+    if($nolog -eq $false){
+        Write-Host "found solutions:" -ForegroundColor:Yellow
+        $solutions | ForEach-Object { Write-Host $_ -ForegroundColor Cyan }  
+    }    
 
     if($Solution -ne ""){
         $solutions = @(TrimPsName($Solution))
@@ -226,7 +230,9 @@ function DeactivateFeatures($solution, $siteUrl, $feature){
 	}
 }
 
-function DeploySolution($name, $url){
+function DeploySolution(){
+
+    param($name, $url = $null)
 		
 	$local = IsSingleServer
 
@@ -241,7 +247,17 @@ function DeploySolution($name, $url){
 		return
 	}
 
-	if ($solution.ContainsWebApplicationResource -eq $true){
+    if($url -eq $null){
+        
+        if ($solution.ContainsWebApplicationResource -eq $true){		
+		    Install-SPSolution $name -GACDeployment -Local:$local -Confirm:$false -AllWebApplications -Force -ErrorAction:Stop -FullTrustBinDeployment:($Bin -eq $true)
+	    }
+	    else{
+		    Install-SPSolution $name -GACDeployment -Local:$local -Confirm:$false -Force -ErrorAction:Stop -FullTrustBinDeployment:($Bin -eq $true)
+	    }
+
+    }
+	elseif ($solution.ContainsWebApplicationResource -eq $true){
 		
 		$webApp = [Microsoft.SharePoint.Administration.SPWebApplication]::Lookup($url)
 		
@@ -525,7 +541,50 @@ function List-Pools(){
 #endregion
 
 
+if($Update -eq $true){
+    Write-Host "Updating solutions" -ForegroundColor Yellow
 
+    $sols = Get-Solutions $true
+
+    foreach($solName in $sols){  
+    
+        if($Solution -ne ""){
+            $n = TrimPsName $Solution
+            if($n -ne $solName){
+                continue
+            }
+        }     
+       
+        $literalPath = [io.path]::Combine($dir, $solName)
+
+        Write-Host ($solName + " ") -NoNewline -ForegroundColor Cyan
+        try{
+            Update-SPSolution -LiteralPath $literalPath -Identity $solName -GACDeployment -ErrorAction Stop
+            Write-Host " Queued" -ForegroundColor Green
+        }
+        catch{
+            
+            if($_.exception.message -match "Cannot find an SPSolution object with Id or Name"){
+
+                try{
+                    AddSolution $literalPath
+                    DeploySolution $literalPath                   
+                    continue 
+                }     
+                catch{
+                    Write-Host ""
+                    Write-Host "$($_.exception.message)" -ForegroundColor Red
+                }         
+            }
+
+            Write-Host ""
+            Write-Host "$($_.exception.message)" -ForegroundColor Red
+        } 
+    }
+
+    return
+
+}
 
 if($Import -eq $true){  
 	Write-Host "commondeployment functions was imported" -ForegroundColor Yellow
