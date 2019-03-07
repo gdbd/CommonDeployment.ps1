@@ -1,7 +1,8 @@
 # CommonDeployment.ps1
 PowerShell to simplify SharePoint deployment operations
 
-By default works with all wsp's in currect folder
+By default works with all wsp's in currect folder.
+
 To limit operation by specific solution, use -Solution parameter
 PowerShell's auto-suggest file names suported: .\mysolution.wsp
 
