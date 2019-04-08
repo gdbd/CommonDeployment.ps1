@@ -1,4 +1,4 @@
-﻿#version 1.9
+#version 1.9.1
 param (
 [switch]$Update,
 [switch]$Uninstall,
@@ -561,6 +561,37 @@ if($Update -eq $true){
         try{
             Update-SPSolution -LiteralPath $literalPath -Identity $solName -GACDeployment -ErrorAction Stop
             Write-Host " Queued" -ForegroundColor Green
+
+            $sleeptime = 2 
+            $counter = 1 
+	        $maximum = 50 
+
+
+            $s= Get-SPSolution $solName 
+
+            if($s.JobExists -ne $true){
+                write-host "wait job started" -NoNewline
+                while(( $s.JobExists -ne $true) -and ( $counter -lt $maximum  ) ) { 
+	                Write-Host -ForegroundColor DarkYellow "." -NoNewline
+	                sleep $sleeptime
+	                $counter++ 
+		        }
+                Write-Host " ok" -ForegroundColor:Green
+            }           
+            
+            if ($s.JobExists -eq $true ) { 
+                write-host  "wait job ends" -NoNewline
+	            $counter = 1 
+	            $maximum = 50 
+	            $sleeptime = 2 		
+	            while( ($s.JobExists -eq $true ) -and ( $counter -lt $maximum  ) ) { 
+	                Write-Host -ForegroundColor yellow "." -NoNewline
+	                sleep $sleeptime
+	                $counter++ 
+		        } 
+                Write-Host " ok" -ForegroundColor:Green
+	        }		   
+
         }
         catch{
             
@@ -581,6 +612,8 @@ if($Update -eq $true){
             Write-Host "$($_.exception.message)" -ForegroundColor Red
         } 
     }
+
+    RestartTimerOnDemand  
 
     return
 
