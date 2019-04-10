@@ -1,4 +1,4 @@
-#version 1.9.1
+#version 1.9.1.1
 param (
 [switch]$Update,
 [switch]$Uninstall,
@@ -554,6 +554,8 @@ if($Update -eq $true){
                 continue
             }
         }     
+
+        $solName = [io.path]::GetFileName($solName)
        
         $literalPath = [io.path]::Combine($dir, $solName)
 
