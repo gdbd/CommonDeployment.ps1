@@ -1,4 +1,4 @@
-#version 1.9.1.1
+#version 1.9.2
 param (
 [switch]$Update,
 [switch]$Uninstall,
@@ -11,6 +11,7 @@ param (
 [switch]$Reactivate,
 [switch]$IisReset,
 [switch]$Import,
+[switch]$Watch,
 [switch]$Bin,
 [switch]$Silent,
 [switch]$Warmup,
@@ -540,6 +541,52 @@ function List-Pools(){
 
 #endregion
 
+if($Watch -eq $true){
+
+    $allSolutions = $true
+    $filter = "*.wsp"
+
+    if ($Solution -ne ""){
+        $filter = TrimPsName $Solution
+        $allSolutions = false
+    }
+
+   # $filter = "test.txt"
+  
+    $message = "watching '$($filter)' changes. Then update"
+
+    write-host $message
+
+    $global:FileChanged = $false
+
+    $watcher = New-Object IO.FileSystemWatcher $dir, $filter -Property @{ 
+        IncludeSubdirectories = $false
+        NotifyFilter = [IO.NotifyFilters]'FileName, LastWrite'
+        EnableRaisingEvents = $true
+    }
+
+    Register-ObjectEvent $watcher Changed -Action {$global:FileChanged = $true} > $null
+
+    while ($true){
+        while ($global:FileChanged -eq $false){
+            Start-Sleep -Milliseconds 100
+        }        
+  
+
+        if($allSolutions -eq $true){           
+            .\CommonDeployment.ps1 -Update
+        }
+        else{           
+            .\CommonDeployment.ps1 -Update -Solution $Solution
+        }
+
+        $global:FileChanged = $false
+        RestartTimerOnDemand
+        write-host $message
+    }
+
+    return
+}
 
 if($Update -eq $true){
     Write-Host "Updating solutions" -ForegroundColor Yellow
