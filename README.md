@@ -47,3 +47,5 @@ Import defined functions, (see script source for reference):
 `. .\commondeployment.ps1 -Import`
 
 and more..
+
+Download: https://github.com/gdbd/CommonDeployment.ps1/releases/
