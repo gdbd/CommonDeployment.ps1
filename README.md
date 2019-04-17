@@ -8,7 +8,8 @@ PowerShell's auto-suggest file names suported: .\mysolution.wsp
 
 Example of output:
 
-<img src="asset\cmdp-watch-update.png" />
+![Image of Yaktocat](https://github.com/gdbd/CommonDeployment.ps1/raw/master/asset/cmdp-watch-update.PNG)
+
 
 Common scenarios:
 
